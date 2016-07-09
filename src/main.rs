@@ -19,4 +19,3 @@ fn run(mut args: env::Args) -> rsed::Result<()> {
 
     Ok(())
 }
-

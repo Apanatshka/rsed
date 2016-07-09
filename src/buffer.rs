@@ -1,9 +1,6 @@
 
 use std::iter::FromIterator;
-use std::io::{
-    BufRead,
-    Write
-};
+use std::io::{BufRead, Write};
 use std::vec::IntoIter;
 use std::ops;
 
@@ -14,22 +11,22 @@ use Result;
 pub struct Buffer {
     lines: Vec<String>,
     cached_num_lines: usize,
-    modified: bool
+    modified: bool,
 }
 
 trait InsertAll {
     type Item;
 
-    fn insert_all<I: IntoIterator<Item=Self::Item>>(&mut self, pos: usize, insert: I) -> usize;
+    fn insert_all<I: IntoIterator<Item = Self::Item>>(&mut self, pos: usize, insert: I) -> usize;
 }
 
-impl <T> InsertAll for Vec<T> {
+impl<T> InsertAll for Vec<T> {
     type Item = T;
 
-    fn insert_all<I: IntoIterator<Item=Self::Item>>(&mut self, pos: usize, insert: I) -> usize {
+    fn insert_all<I: IntoIterator<Item = Self::Item>>(&mut self, pos: usize, insert: I) -> usize {
         let mut count = 0 as usize;
         for (index, item) in insert.into_iter().enumerate() {
-            self.insert( pos + index, item );
+            self.insert(pos + index, item);
             count += 1;
         }
 
@@ -39,11 +36,12 @@ impl <T> InsertAll for Vec<T> {
 
 impl FromIterator<String> for Buffer {
     fn from_iter<T>(iter: T) -> Buffer
-        where T: IntoIterator<Item=String> {
-            let mut buffer = Buffer::new();
-            buffer.insert_lines(0, iter);
-            return buffer
-        }
+        where T: IntoIterator<Item = String>
+    {
+        let mut buffer = Buffer::new();
+        buffer.insert_lines(0, iter);
+        return buffer;
+    }
 }
 
 impl IntoIterator for Buffer {
@@ -56,16 +54,15 @@ impl IntoIterator for Buffer {
 }
 
 impl Buffer {
-
     pub fn new() -> Buffer {
-        Buffer { 
+        Buffer {
             lines: Vec::new(),
             cached_num_lines: 0 as usize,
-            modified: false
+            modified: false,
         }
     }
 
-    pub fn from_buf_read<R: BufRead + Sized> (buf_read: R) -> Result<Buffer> {
+    pub fn from_buf_read<R: BufRead + Sized>(buf_read: R) -> Result<Buffer> {
 
         let lines = buf_read.lines();
 
@@ -75,12 +72,12 @@ impl Buffer {
         Ok(Buffer {
             lines: lines_vec,
             cached_num_lines: cached_len,
-            modified: false
+            modified: false,
         })
 
     }
 
-    pub fn insert_lines<I: IntoIterator<Item=String>>(&mut self, pos: usize, insert: I) {
+    pub fn insert_lines<I: IntoIterator<Item = String>>(&mut self, pos: usize, insert: I) {
         let added_lines = self.lines.insert_all(pos, insert);
         self.cached_num_lines += added_lines;
         self.modified = true;
@@ -127,22 +124,21 @@ impl Buffer {
     }
 
     pub fn get_lines(&self, range: &ops::Range<usize>) -> &[String] {
-        assert!(! self.is_out_of_bounds( range.start ), format!("Out of bounds: {}/0", range.start) );
-        assert!(! self.is_out_of_bounds( range.end ), format!("Out of bounds: {}/{}", range.end, self.len()) );
+        assert!(!self.is_out_of_bounds(range.start),
+                format!("Out of bounds: {}/0", range.start));
+        assert!(!self.is_out_of_bounds(range.end),
+                format!("Out of bounds: {}/{}", range.end, self.len()));
 
 
-        &self.lines[ range.start .. range.end ]
+        &self.lines[range.start..range.end]
     }
 
-    pub fn write<W: Write>(&self, w:&mut W) -> Result<()> {
-        
+    pub fn write<W: Write>(&self, w: &mut W) -> Result<()> {
+
         for line in self.lines.iter() {
-            try!( w.write_all( line.as_bytes() ) );
+            try!(w.write_all(line.as_bytes()));
         }
 
         Ok(())
     }
-
 }
-
-

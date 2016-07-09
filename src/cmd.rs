@@ -7,11 +7,7 @@ use pos;
 use ui::PrintOption;
 use util::FlipResultOption;
 
-use {
-    Result,
-    Error,
-    ErrorType
-};
+use {Result, Error, ErrorType};
 
 #[derive(Debug)]
 pub enum Cmd {
@@ -24,7 +20,7 @@ pub enum Cmd {
     Print(pos::Range, PrintOption),
     PrintLineNumber(pos::Range),
     Edit(String),
-    Write(Option<String>)
+    Write(Option<String>),
 }
 
 impl str::FromStr for Cmd {
@@ -40,14 +36,14 @@ static COMMAND_RE: &'static str = r"^((?P<range>[%.,$\d]+)?(?P<cmd>[a-zA-Z?=])?(
 struct ParsedData {
     cmd_char: Option<char>,
     range: Option<pos::Range>,
-    arg: Option<String>
+    arg: Option<String>,
 }
 
 impl ParsedData {
     fn is_empty(&self) -> bool {
         match (&self.cmd_char, &self.range, &self.arg) {
             (&None, &None, &None) => true,
-            _ => false
+            _ => false,
         }
     }
 
@@ -55,7 +51,7 @@ impl ParsedData {
         ParsedData {
             cmd_char: None,
             range: None,
-            arg: None
+            arg: None,
         }
     }
 
@@ -64,8 +60,8 @@ impl ParsedData {
             return Ok(Cmd::JumpNext);
         }
 
-        let range = self.range.unwrap_or_else( pos::Range::current_line );
-        let arg = self.arg.ok_or( Error::detailed(ErrorType::ParseError, "arg expected") );
+        let range = self.range.unwrap_or_else(pos::Range::current_line);
+        let arg = self.arg.ok_or(Error::detailed(ErrorType::ParseError, "arg expected"));
 
         if let Some(c) = self.cmd_char {
             match c {
@@ -79,7 +75,7 @@ impl ParsedData {
                 '?' => expect_no_arg(arg, Cmd::Debug(range)),
                 'w' => Ok(Cmd::Write(arg.ok())),
                 'e' => Ok(Cmd::Edit(try!(arg))),
-                _ => Err(Error::detailed(ErrorType::ParseError, "unknown command"))
+                _ => Err(Error::detailed(ErrorType::ParseError, "unknown command")),
             }
         } else {
             expect_no_arg(arg, Cmd::Jump(range))
@@ -90,10 +86,10 @@ impl ParsedData {
 fn expect_no_arg(arg: Result<String>, cmd: Cmd) -> Result<Cmd> {
     match arg {
         Err(_) => Ok(cmd),
-        _ => Err(Error::detailed(ErrorType::ParseError, "no arg expected"))
+        _ => Err(Error::detailed(ErrorType::ParseError, "no arg expected")),
     }
 }
-    
+
 impl str::FromStr for ParsedData {
     type Err = Error;
 
@@ -112,11 +108,11 @@ impl str::FromStr for ParsedData {
             let cmd_char = captures.name("cmd").and_then(|c| c.chars().next());
 
             let cmd_arg = captures.name("arg").map(str::to_string);
-            
+
             Ok(ParsedData {
                 cmd_char: cmd_char,
                 range: cmd_range,
-                arg: cmd_arg
+                arg: cmd_arg,
             })
 
         } else {
@@ -124,4 +120,3 @@ impl str::FromStr for ParsedData {
         }
     }
 }
-

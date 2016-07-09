@@ -16,3 +16,6 @@
 # intellij
 *.iml
 .idea/
+
+# cargo fmt
+*.bk

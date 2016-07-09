@@ -3,17 +3,13 @@ use std::convert;
 use std::ops;
 use regex::Regex;
 
-use {
-    Result,
-    Error,
-    ErrorType
-};
+use {Result, Error, ErrorType};
 
 #[derive(Debug)]
 pub enum Pos {
     Line(usize),
     Current,
-    End
+    End,
 }
 
 pub trait Converter<F, T> {
@@ -27,7 +23,7 @@ impl str::FromStr for Pos {
     type Err = Error;
     fn from_str(s: &str) -> Result<Pos> {
         let re = Regex::new(POS_RE).unwrap();
- 
+
         if let Some(captures) = re.captures(s) {
 
             if let Some(_) = captures.name("current") {
@@ -39,9 +35,9 @@ impl str::FromStr for Pos {
             }
 
             if let Some(line) = captures.name("line") {
-                return  match line.parse() {
+                return match line.parse() {
                     Ok(n) => Ok(Pos::Line(n)),
-                    Err(_) => Err(Error::new(ErrorType::ParseError))
+                    Err(_) => Err(Error::new(ErrorType::ParseError)),
                 };
             }
         }
@@ -54,7 +50,7 @@ impl convert::From<Range> for Pos {
     fn from(r: Range) -> Pos {
         match r {
             Range::Line(p) => p,
-            Range::Range(_, p) => p
+            Range::Range(_, p) => p,
         }
     }
 }
@@ -62,7 +58,7 @@ impl convert::From<Range> for Pos {
 #[derive(Debug)]
 pub enum Range {
     Line(Pos),
-    Range(Pos, Pos)
+    Range(Pos, Pos),
 }
 
 impl str::FromStr for Range {
@@ -73,7 +69,7 @@ impl str::FromStr for Range {
 
         if let Some(captures) = re.captures(s) {
             if let Some(_) = captures.name("all") {
-                return Ok( Range::Range( Pos::Line(1), Pos::End ) );
+                return Ok(Range::Range(Pos::Line(1), Pos::End));
             }
 
             if let Some(first) = captures.name("first") {
@@ -83,10 +79,10 @@ impl str::FromStr for Range {
                 if let Some(second) = captures.name("second") {
                     let second_pos = try!(second.parse::<Pos>());
 
-                    return Ok(Range::Range( first_pos, second_pos ));
+                    return Ok(Range::Range(first_pos, second_pos));
                 }
 
-                return Ok(Range::Line( first_pos ));
+                return Ok(Range::Line(first_pos));
             }
         }
 
@@ -95,28 +91,27 @@ impl str::FromStr for Range {
 }
 
 impl Range {
-
-    pub fn to_range<'a, C>(&'a self, conv: &C) -> ops::Range<usize> 
-        where C: Converter<&'a Pos, usize> {
+    pub fn to_range<'a, C>(&'a self, conv: &C) -> ops::Range<usize>
+        where C: Converter<&'a Pos, usize>
+    {
         match *self {
             Range::Line(ref p) => {
                 let pos = conv.convert(&p);
                 if pos == 0 {
-                    ops::Range {
-                        start: 0,
-                        end: 0
-                    }
+                    ops::Range { start: 0, end: 0 }
                 } else {
-                    ops::Range { 
-                        start: pos - 1, 
-                        end: pos
+                    ops::Range {
+                        start: pos - 1,
+                        end: pos,
                     }
                 }
-            },
+            }
 
-            Range::Range(ref f, ref t) => ops::Range {
-                start: conv.convert(&f) - 1, 
-                end: conv.convert(&t)
+            Range::Range(ref f, ref t) => {
+                ops::Range {
+                    start: conv.convert(&f) - 1,
+                    end: conv.convert(&t),
+                }
             }
         }
     }
@@ -124,6 +119,4 @@ impl Range {
     pub fn current_line() -> Range {
         Range::Line(Pos::Current)
     }
-
 }
-

@@ -33,7 +33,7 @@ pub enum ErrorType {
 #[derive(Debug)]
 pub struct Error {
     msg: String,
-    error: ErrorType
+    error: ErrorType,
 }
 
 impl convert::From<regex::Error> for Error {
@@ -52,21 +52,21 @@ impl Error {
     pub fn unknown(msg: &str) -> Error {
         Error {
             msg: msg.to_string(),
-            error: ErrorType::Unknown
+            error: ErrorType::Unknown,
         }
     }
 
     pub fn new(error: ErrorType) -> Error {
-        Error { 
-            msg: String::new(), 
-            error: error 
+        Error {
+            msg: String::new(),
+            error: error,
         }
     }
 
     pub fn detailed<T: ToString>(error: ErrorType, msg: T) -> Error {
         Error {
             msg: msg.to_string(),
-            error: error
+            error: error,
         }
     }
 }
@@ -74,14 +74,14 @@ impl Error {
 #[derive(Debug)]
 struct InputInformation {
     position: pos::Pos,
-    input_buffer: buffer::Buffer
+    input_buffer: buffer::Buffer,
 }
 
 impl InputInformation {
     fn new(pos: pos::Pos) -> InputInformation {
         InputInformation {
             position: pos,
-            input_buffer: buffer::Buffer::new()
+            input_buffer: buffer::Buffer::new(),
         }
     }
 }
@@ -97,7 +97,6 @@ pub struct Rsed {
 }
 
 impl Rsed {
-
     pub fn new() -> Rsed {
         Rsed {
             current_buffer: buffer::Buffer::new(),
@@ -105,7 +104,7 @@ impl Rsed {
             current_line: 1,
             ui: ui::Ui::new(),
             running: true,
-            file_name: None
+            file_name: None,
         }
     }
 
@@ -121,7 +120,7 @@ impl Rsed {
             current_line: 1,
             ui: ui::Ui::new(),
             running: true,
-            file_name: Some(file_name)
+            file_name: Some(file_name),
         })
     }
 
@@ -130,7 +129,7 @@ impl Rsed {
 
         let file = try!(File::open(path));
         let reader = io::BufReader::new(file);
-        
+
         self.current_buffer = try!(buffer::Buffer::from_buf_read(reader));
         self.file_name = file_name;
 
@@ -146,7 +145,7 @@ impl Rsed {
 
             let action_result = match parsed_action {
                 Ok(action) => self.handle_action(action),
-                Err(e) => Err(e)
+                Err(e) => Err(e),
             };
 
             if let Err(e) = action_result {
@@ -172,7 +171,7 @@ impl Rsed {
             Command(rest) => Err(Error::new(ErrorType::UnimplementedCmd(rest))),
 
             Insert(s) => self.insert_line(s),
-            InsertEnd => self.end_insert_mode()
+            InsertEnd => self.end_insert_mode(),
         }
     }
 
@@ -181,7 +180,7 @@ impl Rsed {
 
         // TODO open will crash if file doesn't exist
         let mut file = try!(File::open(path));
-        try!( self.current_buffer.write(&mut file) );
+        try!(self.current_buffer.write(&mut file));
 
         self.file_name = file_name;
 
@@ -201,11 +200,11 @@ impl Rsed {
 
         self.input_info = Some(InputInformation::new(pos));
 
-        Ok(self.ui.set_mode( ui::Mode::Insert ))
+        Ok(self.ui.set_mode(ui::Mode::Insert))
     }
 
     fn insert_line(&mut self, s: String) -> Result<()> {
-        if let Some(ref mut input_info) = self.input_info { 
+        if let Some(ref mut input_info) = self.input_info {
             Ok(input_info.input_buffer.add_line(s))
         } else {
             panic!();
@@ -219,12 +218,12 @@ impl Rsed {
             let input_buffer = input_info.input_buffer;
 
             self.current_line = pos + input_buffer.len();
-            self.current_buffer.insert_buffer( pos, input_buffer );
+            self.current_buffer.insert_buffer(pos, input_buffer);
         } else {
             panic!();
         }
 
-        Ok(self.ui.set_mode( ui::Mode::Command ))
+        Ok(self.ui.set_mode(ui::Mode::Command))
     }
 
     fn print_line_number(&self, r: pos::Range) -> Result<()> {
@@ -237,27 +236,27 @@ impl Rsed {
     fn delete(&mut self, r: pos::Range) -> Result<()> {
         let range = r.to_range(self);
 
-        self.current_buffer.delete_lines( range.start, range.end );
+        self.current_buffer.delete_lines(range.start, range.end);
         Ok(())
     }
 
     fn print_range(&self, r: pos::Range, option: ui::PrintOption) -> Result<()> {
-       let range = r.to_range(self);
+        let range = r.to_range(self);
 
-       if self.current_buffer.is_range_out_of_bounds(&range) {
-           return Err(Error::new(ErrorType::InvalidRange(r)));
-       }
+        if self.current_buffer.is_range_out_of_bounds(&range) {
+            return Err(Error::new(ErrorType::InvalidRange(r)));
+        }
 
-       let model = ui::DisplayModel::new( &self.current_buffer, range, option );
+        let model = ui::DisplayModel::new(&self.current_buffer, range, option);
 
-       self.ui.display( model );
+        self.ui.display(model);
 
-       Ok(())
+        Ok(())
     }
 
     fn jump_to(&mut self, r: pos::Range) -> Result<()> {
-        self.current_line = self.convert( &pos::Pos::from(r) );
-        self.print_range( pos::Range::current_line(), ui::PrintOption::Normal)
+        self.current_line = self.convert(&pos::Pos::from(r));
+        self.print_range(pos::Range::current_line(), ui::PrintOption::Normal)
     }
 
     fn jump_next(&mut self) -> Result<()> {
@@ -266,18 +265,16 @@ impl Rsed {
         }
 
         self.current_line += 1;
-        self.print_range( pos::Range::current_line(), ui::PrintOption::Normal)
+        self.print_range(pos::Range::current_line(), ui::PrintOption::Normal)
     }
-
 }
 
-impl <'a> pos::Converter<&'a pos::Pos, usize> for Rsed {
+impl<'a> pos::Converter<&'a pos::Pos, usize> for Rsed {
     fn convert(&self, pos: &pos::Pos) -> usize {
         match *pos {
             pos::Pos::Line(n) => n,
             pos::Pos::Current => self.current_line,
-            pos::Pos::End => self.current_buffer.len()
+            pos::Pos::End => self.current_buffer.len(),
         }
     }
 }
-
