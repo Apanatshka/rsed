@@ -49,7 +49,7 @@ impl str::FromStr for Pos {
 impl convert::From<Range> for Pos {
     fn from(r: Range) -> Pos {
         match r {
-            Range::Line(p) => p,
+            Range::Line(p) |
             Range::Range(_, p) => p,
         }
     }
@@ -96,7 +96,7 @@ impl Range {
     {
         match *self {
             Range::Line(ref p) => {
-                let pos = conv.convert(&p);
+                let pos = conv.convert(p);
                 if pos == 0 {
                     ops::Range { start: 0, end: 0 }
                 } else {
@@ -109,8 +109,8 @@ impl Range {
 
             Range::Range(ref f, ref t) => {
                 ops::Range {
-                    start: conv.convert(&f) - 1,
-                    end: conv.convert(&t),
+                    start: conv.convert(f) - 1,
+                    end: conv.convert(t),
                 }
             }
         }

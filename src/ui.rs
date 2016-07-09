@@ -50,16 +50,16 @@ impl<'a> DisplayModel<'a> {
 
 
 impl Ui {
-    pub fn new() -> Ui {
+    pub fn new() -> Self {
         Ui { mode: Mode::Command }
     }
 
-    pub fn display<'a>(&self, model: DisplayModel<'a>) {
+    pub fn display(&self, model: DisplayModel) {
 
         for (line_nr, line) in model.buffer.get_lines(&model.range).iter().enumerate() {
 
             let output = match model.option {
-                PrintOption::Normal => format!("{}", line),
+                PrintOption::Normal => line.clone(),
                 PrintOption::Numbered => format!("{}\t{}", line_nr + model.range.start + 1, line),
                 PrintOption::LineEndings => format!("{}$", line),
             };
@@ -91,5 +91,11 @@ impl Ui {
 
     pub fn set_mode(&mut self, mode: Mode) {
         self.mode = mode;
+    }
+}
+
+impl Default for Ui {
+    fn default() -> Self {
+        Ui::new()
     }
 }

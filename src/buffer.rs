@@ -7,7 +7,7 @@ use std::ops;
 
 use Result;
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct Buffer {
     lines: Vec<String>,
     cached_num_lines: usize,
@@ -35,12 +35,12 @@ impl<T> InsertAll for Vec<T> {
 }
 
 impl FromIterator<String> for Buffer {
-    fn from_iter<T>(iter: T) -> Buffer
+    fn from_iter<T>(iter: T) -> Self
         where T: IntoIterator<Item = String>
     {
         let mut buffer = Buffer::new();
         buffer.insert_lines(0, iter);
-        return buffer;
+        buffer
     }
 }
 
@@ -54,12 +54,8 @@ impl IntoIterator for Buffer {
 }
 
 impl Buffer {
-    pub fn new() -> Buffer {
-        Buffer {
-            lines: Vec::new(),
-            cached_num_lines: 0 as usize,
-            modified: false,
-        }
+    pub fn new() -> Self {
+        Buffer::default()
     }
 
     pub fn from_buf_read<R: BufRead + Sized>(buf_read: R) -> Result<Buffer> {
@@ -135,7 +131,7 @@ impl Buffer {
 
     pub fn write<W: Write>(&self, w: &mut W) -> Result<()> {
 
-        for line in self.lines.iter() {
+        for line in &self.lines {
             try!(w.write_all(line.as_bytes()));
         }
 

@@ -97,7 +97,7 @@ pub struct Rsed {
 }
 
 impl Rsed {
-    pub fn new() -> Rsed {
+    pub fn new() -> Self {
         Rsed {
             current_buffer: buffer::Buffer::new(),
             input_info: None,
@@ -138,10 +138,10 @@ impl Rsed {
 
     pub fn main_loop(&mut self) {
 
-        let mut stdin = io::stdin();
+        let stdin = io::stdin();
 
         while self.running {
-            let parsed_action = self.ui.get_input(&mut stdin);
+            let parsed_action = self.ui.get_input(&stdin);
 
             let action_result = match parsed_action {
                 Ok(action) => self.handle_action(action),
@@ -266,6 +266,12 @@ impl Rsed {
 
         self.current_line += 1;
         self.print_range(pos::Range::current_line(), ui::PrintOption::Normal)
+    }
+}
+
+impl Default for Rsed {
+    fn default() -> Self {
+        Rsed::new()
     }
 }
 

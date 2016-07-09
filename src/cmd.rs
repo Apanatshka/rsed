@@ -27,7 +27,7 @@ impl str::FromStr for Cmd {
     type Err = Error;
 
     fn from_str(s: &str) -> Result<Cmd> {
-        try!(s.parse::<ParsedData>()).to_cmd()
+        try!(s.parse::<ParsedData>()).into_cmd()
     }
 }
 
@@ -55,13 +55,13 @@ impl ParsedData {
         }
     }
 
-    fn to_cmd(self) -> Result<Cmd> {
+    fn into_cmd(self) -> Result<Cmd> {
         if self.is_empty() {
             return Ok(Cmd::JumpNext);
         }
 
         let range = self.range.unwrap_or_else(pos::Range::current_line);
-        let arg = self.arg.ok_or(Error::detailed(ErrorType::ParseError, "arg expected"));
+        let arg = self.arg.ok_or_else(|| Error::detailed(ErrorType::ParseError, "arg expected"));
 
         if let Some(c) = self.cmd_char {
             match c {
@@ -95,7 +95,7 @@ impl str::FromStr for ParsedData {
 
     fn from_str(s: &str) -> Result<ParsedData> {
 
-        if s.len() == 0 {
+        if s.is_empty() {
             return Ok(ParsedData::empty());
         }
 
